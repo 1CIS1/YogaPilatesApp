@@ -1,0 +1,153 @@
+name: Release
+
+# Срабатывает по тегу версии, например: git tag v1.0.0 && git push --tags
+on:
+  push:
+    tags:
+      - "v*"
+
+# Необходимые GitHub Secrets:
+#   Сборка (dart-define):
+#     SUPABASE_URL, SUPABASE_ANON_KEY, ONESIGNAL_APP_ID
+#   Подпись Android:
+#     ANDROID_KEYSTORE_BASE64  (base64 от .jks: `base64 -w0 keystore.jks`)
+#     ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD
+#   Подпись iOS (опционально, для подписанного .ipa):
+#     IOS_CERTIFICATE_BASE64, IOS_CERTIFICATE_PASSWORD,
+#     IOS_PROVISIONING_PROFILE_BASE64, IOS_EXPORT_OPTIONS_PLIST_BASE64
+
+jobs:
+  verify:
+    name: Анализ и тесты
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test
+
+  build-android:
+    name: Android (.aab, подписанный)
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - run: flutter pub get
+
+      - name: Восстановить keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: echo "$KEYSTORE_BASE64" | base64 -d > android/app/upload-keystore.jks
+
+      - name: Создать key.properties
+        run: |
+          cat > android/key.properties <<EOF
+          storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}
+          keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}
+          storeFile=upload-keystore.jks
+          EOF
+
+      - name: Сборка App Bundle
+        run: >
+          flutter build appbundle --release
+          --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL }}
+          --dart-define=SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}
+          --dart-define=ONESIGNAL_APP_ID=${{ secrets.ONESIGNAL_APP_ID }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: app-release-aab
+          path: build/app/outputs/bundle/release/app-release.aab
+
+      # Автозагрузку в Play можно добавить через r0adkll/upload-google-play
+      # (нужен сервис-аккаунт Google Play API).
+
+  build-ios:
+    name: iOS (.ipa, подписанный)
+    needs: verify
+    runs-on: macos-latest
+    env:
+      # Контекст secrets недоступен в if шага напрямую — выносим флаг в env.
+      HAS_IOS_SIGNING: ${{ secrets.IOS_CERTIFICATE_BASE64 != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+
+      # Если iOS-секреты не заданы — подпись пропускается, собираем без подписи.
+      - name: Импорт сертификата подписи
+        if: env.HAS_IOS_SIGNING == 'true'
+        uses: apple-actions/import-codesign-certs@v3
+        with:
+          p12-file-base64: ${{ secrets.IOS_CERTIFICATE_BASE64 }}
+          p12-password: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
+
+      - name: Установить provisioning profile
+        if: env.HAS_IOS_SIGNING == 'true'
+        run: |
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          echo "${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}" | base64 -d \
+            > ~/Library/MobileDevice/Provisioning\ Profiles/profile.mobileprovision
+
+      - name: ExportOptions.plist
+        if: env.HAS_IOS_SIGNING == 'true'
+        run: echo "${{ secrets.IOS_EXPORT_OPTIONS_PLIST_BASE64 }}" | base64 -d > ios/ExportOptions.plist
+
+      - name: Сборка IPA (подписанный)
+        if: env.HAS_IOS_SIGNING == 'true'
+        run: >
+          flutter build ipa --release
+          --export-options-plist=ios/ExportOptions.plist
+          --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL }}
+          --dart-define=SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}
+          --dart-define=ONESIGNAL_APP_ID=${{ secrets.ONESIGNAL_APP_ID }}
+
+      - name: Проверочная сборка без подписи (если секреты iOS не заданы)
+        if: env.HAS_IOS_SIGNING != 'true'
+        run: >
+          flutter build ios --release --no-codesign
+          --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL }}
+          --dart-define=SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}
+          --dart-define=ONESIGNAL_APP_ID=${{ secrets.ONESIGNAL_APP_ID }}
+
+      - uses: actions/upload-artifact@v4
+        if: env.HAS_IOS_SIGNING == 'true'
+        with:
+          name: app-release-ipa
+          path: build/ios/ipa/*.ipa
+
+  github-release:
+    name: Черновик GitHub Release
+    needs: [build-android, build-ios]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - name: Создать релиз
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          generate_release_notes: true
+          files: artifacts/**/*

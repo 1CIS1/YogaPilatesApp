@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  analyze-and-test:
+    name: Анализ и тесты
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Установка Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - run: flutter --version
+      - run: flutter pub get
+
+      - name: Статический анализ
+        run: flutter analyze
+
+      - name: Юнит- и виджет-тесты
+        run: flutter test --coverage
+
+      - name: Артефакт покрытия
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage/lcov.info
+          if-no-files-found: ignore
+
+  build-android:
+    name: Сборка Android (debug)
+    needs: analyze-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+
+      # Debug-сборка не требует релизной подписи. Ключи — фиктивные для CI.
+      - name: Сборка APK (debug)
+        run: >
+          flutter build apk --debug
+          --dart-define=SUPABASE_URL=https://example.supabase.co
+          --dart-define=SUPABASE_ANON_KEY=ci-dummy-key
+
+# ПРИМЕЧАНИЕ:
+#  * Релизные сборки (.aab/.ipa) и публикация добавляются на этапе подготовки
+#    к релизу — там потребуются секреты (подпись Android, сертификаты iOS,
+#    боевые ключи Supabase/YooKassa/OneSignal) через GitHub Secrets.

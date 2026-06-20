@@ -1,0 +1,12 @@
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  errors:
+    # Предупреждать, но не блокировать сборку из-за TODO.
+    todo: ignore
+
+linter:
+  rules:
+    prefer_single_quotes: true
+    always_use_package_imports: false
+    avoid_print: true

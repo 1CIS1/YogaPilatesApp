@@ -1,0 +1,23 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1A73E8"/>
+      <stop offset="1" stop-color="#34A853"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="1024" height="1024" rx="220" fill="url(#bg)"/>
+  <!-- Силуэт человека в позе лотоса (плейсхолдер-логотип) -->
+  <g fill="#FFFFFF">
+    <circle cx="512" cy="362" r="78"/>
+    <!-- корпус и скрещённые ноги -->
+    <path d="M512 470
+             c-92 0 -150 64 -176 132
+             c-10 26 8 52 36 52
+             h280
+             c28 0 46 -26 36 -52
+             c-26 -68 -84 -132 -176 -132 z"/>
+    <!-- руки на коленях -->
+    <circle cx="356" cy="640" r="34"/>
+    <circle cx="668" cy="640" r="34"/>
+  </g>
+</svg>

@@ -1,0 +1,15 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <!-- Прозрачный фон: только мотив (для adaptive icon Android).
+       Мотив масштабирован ~62% и центрирован в safe-zone. -->
+  <g fill="#FFFFFF" transform="translate(512,512) scale(0.62) translate(-512,-512)">
+    <circle cx="512" cy="362" r="78"/>
+    <path d="M512 470
+             c-92 0 -150 64 -176 132
+             c-10 26 8 52 36 52
+             h280
+             c28 0 46 -26 36 -52
+             c-26 -68 -84 -132 -176 -132 z"/>
+    <circle cx="356" cy="640" r="34"/>
+    <circle cx="668" cy="640" r="34"/>
+  </g>
+</svg>

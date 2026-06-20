@@ -1,0 +1,12 @@
+# Шаблон подписи релизных сборок Android.
+# Скопируйте в android/key.properties и заполните своими значениями.
+# НЕ коммитьте android/key.properties (он уже в .gitignore).
+#
+# Создание keystore:
+#   keytool -genkey -v -keystore ~/yoga-pilates-upload.jks \
+#     -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+
+storePassword=ПАРОЛЬ_ХРАНИЛИЩА
+keyPassword=ПАРОЛЬ_КЛЮЧА
+keyAlias=upload
+storeFile=/абсолютный/путь/к/yoga-pilates-upload.jks

@@ -1,0 +1,25 @@
+# Flutter / Dart
+.dart_tool/
+.packages
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+pubspec.lock        # для приложения можно коммитить; для шаблона — игнорируем
+.fvm/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Секреты / окружение
+.env
+*.keystore
+*.jks
+android/key.properties
+ios/Runner/GoogleService-Info.plist
+android/app/google-services.json
+
+# OS
+.DS_Store
+Thumbs.db

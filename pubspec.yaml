@@ -1,0 +1,94 @@
+name: yoga_pilates_app
+description: "Кроссплатформенное приложение студии йоги и пилатеса (iOS + Android)."
+publish_to: "none"
+version: 0.1.0+1
+
+# Riverpod 3.x и go_router 17.x требуют свежий SDK.
+environment:
+  sdk: ">=3.6.0 <4.0.0"
+  flutter: ">=3.27.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # --- Backend / Supabase ---
+  supabase_flutter: ^2.12.4          # Auth, Postgres, Realtime, Storage
+  flutter_secure_storage: ^9.2.4     # безопасное хранение токенов
+
+  # --- State management / DI (Riverpod 3) ---
+  flutter_riverpod: ^3.3.1
+
+  # --- Навигация ---
+  go_router: ^17.2.3
+
+  # --- Локальный кэш (офлайн) ---
+  hive_ce: ^2.0.0                    # community-форк Hive (поддерживается)
+  hive_ce_flutter: ^2.0.0
+
+  # --- UI / утилиты ---
+  google_fonts: ^6.2.1
+  table_calendar: ^3.1.0             # календарь расписания (неделя/месяц)
+  cached_network_image: ^3.4.1
+  intl: ^0.20.2                      # форматирование дат/чисел (ru_RU)
+
+  # --- Push-уведомления ---
+  onesignal_flutter: ^5.3.0          # FCM + APNS через один SDK
+  flutter_local_notifications: ^17.2.3  # локальные напоминания (офлайн)
+  timezone: ^0.9.4                   # для планирования локальных уведомлений
+
+  # --- Оплата (prod-режим) ---
+  webview_flutter: ^4.10.0           # открытие страницы оплаты YooKassa
+
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+  # Генерация иконок и сплэш-экрана
+  flutter_launcher_icons: ^0.14.1
+  flutter_native_splash: ^2.4.1
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+    - assets/icons/
+
+# ПРИМЕЧАНИЯ:
+#  * Точные версии разрешатся при `flutter pub get`. При конфликте ограничений —
+#    `flutter pub upgrade --major-versions`.
+#  * Ключи Supabase/OneSignal передаются через --dart-define (см. README).
+#  * Когда понадобится code-gen (riverpod_generator/freezed) или мультиязычность
+#    (flutter gen-l10n + arb-файлы) — добавим зависимости и `generate: true`.
+
+# =====================================================================
+#  Иконка приложения (flutter_launcher_icons)
+#  Требуется PNG 1024×1024: assets/icon/icon.png (см. assets/icon/README.md).
+#  Генерация: dart run flutter_launcher_icons
+# =====================================================================
+flutter_launcher_icons:
+  android: "ic_launcher"
+  ios: true
+  image_path: "assets/icon/icon.png"
+  min_sdk_android: 21
+  remove_alpha_ios: true
+  adaptive_icon_background: "#1A73E8"
+  adaptive_icon_foreground: "assets/icon/icon_foreground.png"
+
+# =====================================================================
+#  Сплэш-экран (flutter_native_splash)
+#  Генерация: dart run flutter_native_splash:create
+# =====================================================================
+flutter_native_splash:
+  color: "#1A73E8"
+  image: "assets/icon/splash_logo.png"
+  android: true
+  ios: true
+  android_12:
+    color: "#1A73E8"
+    image: "assets/icon/splash_logo.png"
